@@ -1,0 +1,2 @@
+[console_scripts]
+erosolar = universal_agent:main

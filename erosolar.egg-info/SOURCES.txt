@@ -1,0 +1,17 @@
+MANIFEST.in
+README.md
+agent_mcp_server.py
+agent_toolkit.py
+cli_ui.py
+mcp_integration.py
+mcp_servers.sample.json
+persistent_tools.py
+pyproject.toml
+tool_retrieval.py
+universal_agent.py
+erosolar.egg-info/PKG-INFO
+erosolar.egg-info/SOURCES.txt
+erosolar.egg-info/dependency_links.txt
+erosolar.egg-info/entry_points.txt
+erosolar.egg-info/requires.txt
+erosolar.egg-info/top_level.txt

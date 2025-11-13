@@ -1,0 +1,198 @@
+Metadata-Version: 2.4
+Name: erosolar
+Version: 0.2.0
+Summary: Universal LangGraph agent CLI with self-improvement, MCP support, and comprehensive task automation.
+Author: Erosolar AI
+Project-URL: Homepage, https://github.com/dragonghidra/universal_agent
+Project-URL: Source, https://github.com/dragonghidra/universal_agent
+Project-URL: Issues, https://github.com/dragonghidra/universal_agent/issues
+Keywords: agent,langgraph,langchain,cli,mcp
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: langgraph
+Requires-Dist: langchain
+Requires-Dist: langchain-openai
+Requires-Dist: faiss-cpu
+Requires-Dist: mcp
+Requires-Dist: numpy
+Requires-Dist: pydantic>=2
+Requires-Dist: rank-bm25
+Requires-Dist: requests
+Requires-Dist: typing_extensions
+
+# Erosolar
+
+Erosolar packages the Universal Agent CLI so it can be installed from PyPI and launched with the `erosolar` command. This is a universal problem-solving agent capable of accomplishing any task through iterative self-improvement, external API integration, browser automation, and multi-run learning.
+
+## Features
+
+- **Self-Improvement & Iterative Execution**: Agent can analyze task results, identify failures, store learnings, and automatically iterate until success.
+- **LangGraph-based planner/executor loop** with LangChain + DeepSeek for reasoning.
+- **Built-in research tools**: Tavily search/extract, HTTP fetch, weather, shell commands, Python code execution.
+- **Browser Automation**: Full Playwright integration for headless browsing, form filling, account creation, and web scraping.
+- **SQLite-backed `tool_library`**: Agent can create, edit, or delete its own reusable shell/Python tools and run them on demand.
+- **Persistent `research_vault`**: Store and recall notes across multiple sessions for long-running investigations.
+- **Self-improvement system**: Analyze results, iterate on solutions, and store learnings for future tasks.
+- **External API Integration**: Easily integrate any external API through custom tools or direct API calls.
+- **Optional MCP bridge**: Talk with Model Context Protocol servers.
+- **Interactive terminal UI** plus lightweight REST hook (`/chat`) for programmatic prompts.
+
+## Installation
+
+```bash
+pip install erosolar
+```
+
+## Usage
+
+1. Export the required API keys:
+   - `DEEPSEEK_API_KEY` – DeepSeek Reasoner access.
+   - `TAVILY_API_KEY` – Tavily search + extract.
+   - Optional: `OPENAI_API_KEY`, `TAVILY_API_BASE`, etc. (see `universal_agent.py` for the full list).
+2. (Optional) Provide MCP configuration by setting `AGENT_MCP_SERVERS` to JSON or by creating `mcp_servers.json` (copy `mcp_servers.sample.json`).
+3. Run the CLI:
+
+```bash
+erosolar --verbose
+```
+
+Use `exit` or `quit` to leave the session. The agent also exposes `http://127.0.0.1:9000/chat` so you can `POST {"message": "..."}` while the CLI is running.
+
+### Persistent tools & research vault
+
+- Invoke the `tool_library` tool from the agent to create new capabilities (shell or Python), update them, run them with structured arguments, or remove them entirely. Entries are stored in an on-disk SQLite database so they survive across runs.
+- Use the `research_vault` tool to write, append, list, or delete research notes scoped by namespace/project. This is useful for multi-day investigations that need durable memory.
+- Storage defaults to `<repo>/.agent_state/agent_state.sqlite3`. Override the location with `AGENT_STATE_DIR` (directory) and/or `AGENT_STATE_DB` (full file path) if you prefer a shared or cloud-synced location.
+
+## Universal Task Capabilities
+
+### Self-Improvement & Iterative Execution
+
+The agent can automatically improve itself through multiple runs:
+
+```bash
+erosolar
+> Create a web scraper for product prices from example.com, and if it fails, analyze the issue and retry with improvements until it works
+```
+
+The agent will:
+1. Attempt the task
+2. If it fails, use `self_improve(action='analyze')` to identify issues
+3. Use `self_improve(action='iterate')` to generate improvements
+4. Retry with the improved approach
+5. Store successful patterns with `self_improve(action='store_learning')` for future use
+
+### External API Integration
+
+Integrate any external API through custom tools:
+
+```bash
+> Create a tool that calls the GitHub API to list my repositories, then use it to fetch my repos
+```
+
+The agent will:
+1. Use `tool_library` to create a custom tool with API authentication
+2. Execute the tool with your parameters
+3. Parse and present the results
+
+Example for a weather API:
+```bash
+> Create a tool that calls OpenWeatherMap API with my API key xyz123, then get weather for London
+```
+
+### Browser Automation & Account Management
+
+Use Playwright for complex web interactions:
+
+```bash
+> Go to example.com, create a new account with email test@example.com, fill in the signup form, and take a screenshot
+```
+
+The agent will:
+1. Use `headless_browse` with Playwright
+2. Navigate to the site
+3. Fill forms, click buttons, handle JavaScript
+4. Create accounts or perform any web actions
+5. Capture screenshots or HTML as needed
+
+### Terminal Command Execution
+
+Execute any terminal command:
+
+```bash
+> Install the 'jq' package using brew, then use it to parse the JSON file in ~/data.json
+```
+
+The agent uses `run_shell` with full system access to:
+- Install software
+- Run build processes
+- Execute scripts
+- Launch applications
+- Manage files and processes
+
+### Code Generation & Execution
+
+Generate and run code in Python:
+
+```bash
+> Write Python code to analyze the CSV file sales.csv, calculate total revenue by product, and create a bar chart
+```
+
+The agent will:
+1. Use `run_python` to execute multi-step code
+2. Install required libraries if needed (via shell)
+3. Process data and generate outputs
+4. Show results or save files
+
+### Multi-Run Learning
+
+The agent learns from past experiences:
+
+```bash
+> Check my past learnings about web scraping, then scrape prices from ecommerce-site.com using those learnings
+```
+
+The agent will:
+1. Use `self_improve(action='get_learnings', category='web_scraping')`
+2. Apply past successful patterns
+3. Avoid previous mistakes
+4. Update learnings with new insights
+
+## Advanced Examples
+
+### Example 1: Complex API Integration
+```bash
+> Create a tool that integrates with the Stripe API to list recent payments, then use it to show me today's payments
+```
+
+### Example 2: Data Pipeline
+```bash
+> Download data from api.example.com, clean it with Python, analyze trends, create visualizations, and email the report to team@example.com
+```
+
+### Example 3: Automated Testing
+```bash
+> Go to myapp.com/login, test the login form with various inputs, document any bugs found, and store findings in the research vault
+```
+
+### Example 4: Multi-Step Automation
+```bash
+> Create a shell script that backs up my Documents folder to S3, test it, fix any errors through iteration, and schedule it to run daily
+```
+
+## Development
+
+```bash
+python -m pip install -U pip build twine
+python -m build
+python -m twine upload dist/*
+```
+
+Set `TWINE_USERNAME=__token__` and `TWINE_PASSWORD` to a valid PyPI API token (recommended via environment variables or CI secrets). GitHub Actions users can re-use the included workflow (`.github/workflows/workflow.yml`) and store the token in `PYPI_API_TOKEN`.

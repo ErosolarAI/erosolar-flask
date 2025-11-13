@@ -1,0 +1,10 @@
+langgraph
+langchain
+langchain-openai
+faiss-cpu
+mcp
+numpy
+pydantic>=2
+rank-bm25
+requests
+typing_extensions
